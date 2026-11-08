@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2F6B5C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="복리">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>복리 적립 시뮬레이터 v2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EAEEE7;
+    --card:#FCFDFB;
+    --ink:#15271F;
+    --ink-soft:#5D6C63;
+    --ink-faint:#8A968D;
+    --principal:#2F6B5C;
+    --principal-soft:#B6D2C9;
+    --gains:#C48A28;
+    --gains-deep:#8a5f14;
+    --gains-soft:#EBD59B;
+    --late:#B0533E;
+    --line:#D3DBCF;
+    --line-soft:#E2E8DD;
+    --shadow:0 1px 2px rgba(21,39,31,.06),0 8px 30px rgba(21,39,31,.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:'Space Grotesk','Pretendard',sans-serif;font-feature-settings:'tnum' 1;letter-spacing:-.01em;}
+  .wrap{max-width:1060px;margin:0 auto;padding:40px 22px 64px;}
+
+  /* ---- header ---- */
+  header{margin-bottom:30px;}
+  .eyebrow{
+    font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--principal);display:flex;align-items:center;gap:9px;margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1.5px;background:var(--principal);display:inline-block;}
+  h1{
+    font-size:clamp(28px,5vw,42px);font-weight:700;line-height:1.12;margin:0 0 12px;
+    letter-spacing:-.02em;
+  }
+  h1 em{font-style:normal;color:var(--gains);}
+  .lede{font-size:15px;color:var(--ink-soft);max-width:660px;margin:0;}
+
+  /* ---- layout ---- */
+  .grid{display:grid;grid-template-columns:344px 1fr;gap:22px;align-items:start;}
+  @media(max-width:840px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow);padding:22px;
+  }
+  .panel h2{
+    font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-faint);margin:0 0 18px;
+  }
+
+  /* ---- controls ---- */
+  .field{margin-bottom:22px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;font-weight:600;margin-bottom:9px;}
+  .field label .val{font-size:15px;color:var(--principal);}
+  .field label .val.gold{color:var(--gains);}
+  .field label .val.soft{color:var(--ink-soft);}
+  .inputrow{display:flex;align-items:center;gap:8px;}
+  input[type=number], input.numinput{
+    width:100%;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:500;
+    padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
+    outline:none;transition:border-color .15s,box-shadow .15s;-moz-appearance:textfield;
+  }
+  input[type=number]:focus, input.numinput:focus{border-color:var(--principal);box-shadow:0 0 0 3px rgba(47,107,92,.13);}
+  .suffix{font-size:13px;color:var(--ink-soft);white-space:nowrap;flex-shrink:0;}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
+    background:var(--line);outline:none;margin-top:14px;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+    background:var(--principal);border:3px solid #fff;box-shadow:0 1px 4px rgba(21,39,31,.25);cursor:pointer;
+  }
+  input[type=range].gold::-webkit-slider-thumb{background:var(--gains);}
+  input[type=range]::-moz-range-thumb{
+    width:15px;height:15px;border-radius:50%;background:var(--principal);border:3px solid #fff;cursor:pointer;
+  }
+  input[type=range].gold::-moz-range-thumb{background:var(--gains);}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+  .chip{
+    font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:500;
+    padding:6px 11px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--ink-soft);
+    cursor:pointer;transition:all .13s;
+  }
+  .chip:hover{border-color:var(--principal);color:var(--principal);}
+  .chip:active{transform:translateY(1px);}
+
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot.sp{background:#3E6BB0;}
+  .dot.nq{background:var(--gains);}
+  .dot.us{background:#3E6BB0;}
+  .dot.kr{background:#C0392B;}
+
+  .preset-group{margin-bottom:14px;}
+  .preset-group:last-child{margin-bottom:0;}
+  .preset-title{font-size:12px;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+  .preset-note{font-size:11px;color:var(--ink-faint);font-weight:400;}
+  .pchip{
+    font-family:'Space Grotesk',sans-serif;font-size:12.5px;padding:7px 10px;border-radius:9px;
+    border:1px solid var(--line);background:#fff;cursor:pointer;transition:all .13s;text-align:center;
+  }
+  .pchip b{display:block;font-weight:600;font-size:13px;}
+  .pchip span{font-size:10.5px;color:var(--ink-faint);}
+  .pchip:hover{border-color:var(--gains);background:#fffdf6;}
+  .pchip.active{border-color:var(--gains);background:#fdf6e6;box-shadow:0 0 0 2px rgba(196,138,40,.15);}
+  .pgrid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;}
+
+  /* inflation presets */
+  .infl-presets{margin-top:14px;}
+  .ip-row{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+  .ip-lbl{font-size:11.5px;font-weight:700;color:var(--ink-soft);white-space:nowrap;width:62px;flex-shrink:0;
+    display:flex;align-items:center;gap:6px;}
+  .igrid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;flex:1;}
+  .ichip{
+    font-family:'Space Grotesk',sans-serif;font-size:12px;padding:5px 2px;border-radius:8px;
+    border:1px solid var(--line);background:#fff;cursor:pointer;transition:all .13s;text-align:center;line-height:1.25;
+  }
+  .ichip b{display:block;font-weight:600;font-size:12.5px;color:var(--ink);}
+  .ichip span{font-size:9.5px;color:var(--ink-faint);}
+  .ichip:hover{border-color:var(--principal);background:#f6faf8;}
+  .ichip.active{border-color:var(--principal);background:#eef6f2;box-shadow:0 0 0 2px rgba(47,107,92,.15);}
+  .ip-hint{font-size:10.5px;color:var(--ink-faint);margin-top:2px;}
+
+  /* ---- results ---- */
+  .results{display:flex;flex-direction:column;gap:22px;}
+
+  .hero{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+    padding:26px 26px 22px;position:relative;overflow:hidden;
+  }
+  .hero::after{
+    content:"";position:absolute;top:0;right:0;width:180px;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(196,138,40,.06));pointer-events:none;
+  }
+  .hero .cap{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:6px;}
+  .hero .big{font-size:clamp(34px,6.5vw,52px);font-weight:700;line-height:1.05;letter-spacing:-.025em;}
+  .hero .big .unit{font-family:'Pretendard';font-size:.42em;font-weight:600;color:var(--ink-soft);margin-left:2px;}
+  .hero .sub{font-size:13px;color:var(--ink-faint);margin-top:6px;}
+  .hero .sub b{color:var(--gains);font-weight:600;}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line-soft);
+    border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:20px;}
+  @media(max-width:480px){.stats{grid-template-columns:1fr;}}
+  .stat{background:var(--card);padding:15px 16px;}
+  .stat .k{font-size:11.5px;color:var(--ink-faint);font-weight:600;margin-bottom:5px;}
+  .stat .v{font-size:19px;font-weight:600;letter-spacing:-.01em;}
+  .stat .v.teal{color:var(--principal);}
+  .stat .v.gold{color:var(--gains);}
+  .stat .v .u{font-size:12px;color:var(--ink-soft);font-weight:500;margin-left:1px;font-family:'Pretendard';}
+
+  .cross{
+    display:flex;align-items:center;gap:10px;margin-top:16px;padding:11px 15px;
+    background:linear-gradient(90deg,#fdf6e6,#fcfdfb);border:1px solid var(--gains-soft);border-radius:12px;
+    font-size:13px;
+  }
+  .cross svg{flex-shrink:0;}
+  .cross b{color:var(--gains);}
+  .cross.none{background:#f6f8f4;border-color:var(--line);color:var(--ink-soft);}
+
+  /* milestones */
+  .miles{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;}
+  .mile{
+    display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
+    padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+  }
+  .mile.hit{border-color:var(--principal-soft);background:#eef6f2;color:var(--principal);}
+  .mile .my{font-family:'Space Grotesk';font-weight:600;}
+  .mile .flag{font-size:12px;}
+
+  /* ---- chart ---- */
+  .chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;}
+  .legend span{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);font-weight:500;}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .legend i.p{background:var(--principal);}
+  .legend i.g{background:var(--gains);}
+  .legend i.l{background:none;border-top:2.5px dashed var(--late);width:16px;height:0;border-radius:0;}
+  .toggles{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .tgl{
+    display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    padding:6px 12px;border:1px solid var(--line);border-radius:20px;background:#fff;cursor:pointer;
+    transition:all .13s;user-select:none;
+  }
+  .tgl:hover{border-color:var(--principal);}
+  .tgl.on{border-color:var(--principal);background:#eef6f2;color:var(--principal);}
+  .tgl.on.warm{border-color:var(--late);background:#fbeeea;color:var(--late);}
+  select.delay{
+    font-family:'Pretendard';font-size:12.5px;font-weight:600;color:var(--late);
+    border:1px solid var(--line);border-radius:20px;padding:5px 8px;background:#fff;cursor:pointer;outline:none;
+  }
+  #chartWrap{position:relative;width:100%;}
+  #chart{width:100%;display:block;}
+  .tip{
+    position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;
+    padding:9px 12px;font-size:12px;opacity:0;transition:opacity .12s;transform:translate(-50%,-100%);
+    white-space:nowrap;z-index:5;box-shadow:0 6px 20px rgba(21,39,31,.28);
+  }
+  .tip .ty{font-weight:600;margin-bottom:4px;font-family:'Space Grotesk';}
+  .tip .tr{display:flex;justify-content:space-between;gap:14px;line-height:1.5;}
+  .tip .tr .tl{color:#b8c6bd;}
+  .tip .tr .g{color:var(--gains-soft);}
+  .tip .tr .l{color:#f0b7a8;}
+  .barg{cursor:pointer;}
+  .barg.grow{animation:grow .55s cubic-bezier(.22,1,.36,1) backwards;}
+  @keyframes grow{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+
+  .latecard{
+    margin-top:14px;padding:12px 15px;border:1px solid #EBC9BE;border-radius:12px;
+    background:linear-gradient(90deg,#fbeeea,#fcfdfb);font-size:13px;display:none;
+  }
+  .latecard.show{display:block;}
+  .latecard b{color:var(--late);}
+  .latecard .amt{font-family:'Space Grotesk';font-weight:600;}
+
+  /* ---- goal ---- */
+  .goalgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;}
+  @media(max-width:560px){.goalgrid{grid-template-columns:1fr;}}
+  .goalbox{border:1px solid var(--line);border-radius:14px;padding:15px 16px;background:#fbfcf9;}
+  .goalbox .gk{font-size:11.5px;color:var(--ink-faint);font-weight:600;margin-bottom:6px;}
+  .goalbox .gv{font-size:20px;font-weight:700;letter-spacing:-.01em;}
+  .goalbox .gv.teal{color:var(--principal);}
+  .goalbox .gv.gold{color:var(--gains);}
+  .goalbox .gnote{font-size:11.5px;color:var(--ink-faint);margin-top:5px;line-height:1.5;}
+  .goalinput{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .goalinput .lbl{font-size:13.5px;font-weight:600;white-space:nowrap;}
+  .goalinput input{max-width:120px;}
+
+  /* ---- table ---- */
+  .table-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .csvbtn{
+    display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:20px;background:#fff;padding:6px 13px;cursor:pointer;transition:all .13s;
+    font-family:'Pretendard';
+  }
+  .csvbtn:hover{border-color:var(--principal);color:var(--principal);}
+  .tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:14px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    position:sticky;top:0;background:#f4f7f1;color:var(--ink-soft);font-weight:600;font-size:11.5px;
+    text-align:right;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1;
+  }
+  thead th:first-child{text-align:center;}
+  tbody td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--line-soft);
+    font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;}
+  tbody td:first-child{text-align:center;color:var(--ink-faint);font-weight:600;}
+  tbody tr:hover{background:#f7faf6;}
+  tbody tr.xrow{background:#fdf6e6;}
+  tbody tr.xrow:hover{background:#fbf0d9;}
+  tbody tr.xrow td:first-child{color:var(--gains);}
+  td.teal{color:var(--principal);}
+  td.gold{color:var(--gains);font-weight:500;}
+  .tag{font-family:'Pretendard';font-size:10px;background:var(--gains);color:#fff;padding:1px 6px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+  .mtag{font-family:'Pretendard';font-size:10px;background:var(--principal);color:#fff;padding:1px 6px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+
+  /* ---- footer ---- */
+  footer{margin-top:30px;font-size:12px;color:var(--ink-faint);line-height:1.7;}
+  footer b{color:var(--ink-soft);font-weight:600;}
+  footer .disc{margin-top:10px;padding-top:14px;border-top:1px solid var(--line);}
+  .sec-title{font-size:14px;font-weight:700;margin:0 0 4px;color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">복리 적립 시뮬레이터 v2</div>
+    <h1>매달 조금씩, 시간이 <em>눈덩이</em>를 굴린다</h1>
+    <p class="lede">매월 초 같은 금액을 넣고 매년 말 평가액을 계산합니다. 파란 막대는 원금, 금색 막대는 복리 수익 — 그리고 이번 버전에서는 <b>"늦게 시작의 대가"</b>와 <b>목표 금액 역산</b>까지 볼 수 있습니다.</p>
+  </header>
+
+  <div class="grid">
+    <!-- CONTROLS -->
+    <div class="panel">
+      <h2>입력 조건</h2>
+
+      <div class="field">
+        <label>월 불입금액 <span class="val" id="lblMonthly">100만원</span></label>
+        <div class="inputrow">
+          <input type="number" id="monthly" value="100" min="0" step="1">
+          <span class="suffix">만원 / 월</span>
+        </div>
+        <div class="chips">
+          <button class="chip" data-m="10">10만</button>
+          <button class="chip" data-m="30">30만</button>
+          <button class="chip" data-m="50">50만</button>
+          <button class="chip" data-m="100">100만</button>
+          <button class="chip" data-m="200">200만</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>연평균 수익률 <span class="val gold" id="lblReturn">10.0%</span></label>
+        <div class="inputrow">
+          <input type="text" inputmode="decimal" class="numinput" id="retNum" value="10.0">
+          <span class="suffix">% / 년</span>
+        </div>
+        <input type="range" class="gold" id="retSlider" min="0" max="30" step="0.1" value="10">
+      </div>
+
+      <div class="field">
+        <label>투자 기간 <span class="val" id="lblYears">30년</span></label>
+        <div class="inputrow">
+          <input type="number" id="yrNum" value="30" min="1" max="50" step="1">
+          <span class="suffix">년</span>
+        </div>
+        <input type="range" id="yrSlider" min="1" max="40" step="1" value="30">
+      </div>
+
+      <div class="field">
+        <label>연 보수·수수료 <span class="val soft" id="lblFee">0.0%</span></label>
+        <div class="inputrow">
+          <input type="text" inputmode="decimal" class="numinput" id="feeNum" value="0.0">
+          <span class="suffix">% / 년 (ETF 보수 등)</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>물가상승률 <span class="val soft" id="lblInfl">3.0%</span></label>
+        <div class="inputrow">
+          <input type="text" inputmode="decimal" class="numinput" id="inflNum" value="3.0">
+          <span class="suffix">% (실질가치 환산용)</span>
+        </div>
+        <div class="infl-presets">
+          <div class="ip-row">
+            <span class="ip-lbl"><span class="dot us"></span>미국 CPI</span>
+            <div class="igrid" data-c="us"></div>
+          </div>
+          <div class="ip-row">
+            <span class="ip-lbl"><span class="dot kr"></span>한국 CPI</span>
+            <div class="igrid" data-c="kr"></div>
+          </div>
+          <div class="ip-hint">구간별 연평균(근사치) · 클릭 시 물가상승률에 입력</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results">
+      <div class="hero">
+        <div class="cap">투자 종료 시 예상 평가금액</div>
+        <div class="big num" id="finalBig">–</div>
+        <div class="sub" id="finalSub"></div>
+
+        <div class="stats">
+          <div class="stat"><div class="k">누적 원금</div><div class="v teal num" id="stPrin">–</div></div>
+          <div class="stat"><div class="k">누적 수익</div><div class="v gold num" id="stGain">–</div></div>
+          <div class="stat"><div class="k">총 수익률</div><div class="v num" id="stRate">–</div></div>
+        </div>
+
+        <div class="cross" id="cross"></div>
+        <div class="miles" id="miles"></div>
+      </div>
+
+      <!-- index presets -->
+      <div class="panel">
+        <h2>지수 과거 수익률로 채우기</h2>
+        <div class="preset-group">
+          <div class="preset-title"><span class="dot sp"></span>S&amp;P 500 <span class="preset-note">· 배당 재투자 총수익 연평균(근사치)</span></div>
+          <div class="pgrid" data-idx="sp"></div>
+        </div>
+        <div class="preset-group">
+          <div class="preset-title"><span class="dot nq"></span>NASDAQ 100 <span class="preset-note">· 배당 재투자 총수익 연평균(근사치)</span></div>
+          <div class="pgrid" data-idx="nq"></div>
+        </div>
+      </div>
+
+      <!-- chart -->
+      <div class="panel">
+        <div class="chart-head">
+          <h2 style="margin:0">연도별 성장 (원금 + 수익)</h2>
+          <div class="toggles">
+            <span class="tgl" id="tglReal">실질가치 보기</span>
+            <span class="tgl warm" id="tglLate">늦게 시작 비교</span>
+            <select class="delay" id="delaySel" style="display:none">
+              <option value="3">3년 늦게</option>
+              <option value="5" selected>5년 늦게</option>
+              <option value="10">10년 늦게</option>
+            </select>
+          </div>
+        </div>
+        <div class="legend" style="margin-bottom:6px">
+          <span><i class="p"></i>누적 원금</span>
+          <span><i class="g"></i>누적 수익</span>
+          <span id="legLate" style="display:none"><i class="l"></i>늦게 시작한 경우</span>
+        </div>
+        <div id="chartWrap">
+          <svg id="chart"></svg>
+          <div class="tip" id="tip"></div>
+        </div>
+        <div class="latecard" id="lateCard"></div>
+      </div>
+
+      <!-- goal seek -->
+      <div class="panel">
+        <h2>목표 금액 역산</h2>
+        <div class="goalinput">
+          <span class="lbl">목표 금액</span>
+          <input type="text" inputmode="decimal" class="numinput" id="goalNum" value="10.0">
+          <span class="suffix">억원</span>
+        </div>
+        <div class="goalgrid">
+          <div class="goalbox">
+            <div class="gk">현재 수익률·기간으로 목표를 달성하려면</div>
+            <div class="gv teal num" id="goalMonthly">–</div>
+            <div class="gnote" id="goalMonthlyNote"></div>
+          </div>
+          <div class="goalbox">
+            <div class="gk">현재 월 불입액을 유지하면</div>
+            <div class="gv gold num" id="goalWhen">–</div>
+            <div class="gnote" id="goalWhenNote"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- table -->
+      <div class="panel">
+        <div class="table-head">
+          <h2 style="margin:0">연도별 시뮬레이션 테이블</h2>
+          <button class="csvbtn" id="csvBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>
+            CSV 다운로드
+          </button>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>연차</th>
+                <th>누적 원금</th>
+                <th>평가금액</th>
+                <th>수익률</th>
+                <th>물가상승 실질가치</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="sec-title">활용 팁</div>
+    <b>늦게 시작 비교</b>를 켜 보세요 — 같은 돈, 같은 수익률이라도 5년 미루면 마지막에 얼마나 큰 차이가 나는지 금액으로 확인됩니다. 복리에서 가장 비싼 것은 수익률이 아니라 <b>미룬 시간</b>입니다.
+    수익률 슬라이더로 7% · 10% · 15%를 비교하고, <b>실질가치 보기</b>로 오늘의 구매력 기준 결과도 확인해 보세요. 목표 금액 역산으로 "10억을 만들려면 매달 얼마?"에 바로 답할 수 있습니다.
+    <div class="disc">
+      <b>가정 및 유의사항.</b> 매월 초 정액 불입, 연수익률을 월 복리(기하평균)로 환산해 계산합니다. 연 보수·수수료는 수익률에서 매년 차감되는 방식으로 반영하며((1+수익률)×(1−보수)−1), 세금·거래비용은 반영하지 않았습니다.
+      지수 프리셋은 배당 재투자 총수익 기준의 <b>근사 연평균(CAGR)</b>이며 산출 기관·방법론·기준일에 따라 달라질 수 있습니다(대략 2025년 말~2026년 중 기준). NASDAQ 100의 최근 10년 수치는 최근 기술주 강세로 이례적으로 높은 구간이며, 40년은 지수 산출 시작(1985년) 이후 사실상 전 기간입니다.
+      물가상승률 프리셋은 미국(BLS)·한국(통계청) 소비자물가지수(CPI) 기준의 <b>구간별 연평균 근사치</b>입니다. 최근 10년 수치는 2021~2023년 물가 급등의 영향을 받았고, 한국의 30·40년 구간은 1980~1990년대 고물가기를 포함합니다. 마일스톤·목표 역산은 명목 금액 기준입니다.
+      <b>과거 수익률·물가는 미래를 보장하지 않으며</b>, 본 도구는 교육·시뮬레이션 목적입니다. 투자 자문이나 특정 상품 권유가 아닙니다.
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- index presets (approx total-return CAGR, dividends reinvested) ----
+  var PRESETS = {
+    sp: [ {p:"10년", r:13.5}, {p:"20년", r:11.0}, {p:"30년", r:10.5}, {p:"40년", r:11.5} ],
+    nq: [ {p:"10년", r:22.5}, {p:"20년", r:15.5}, {p:"30년", r:14.0}, {p:"40년", r:14.5} ]
+  };
+  // ---- inflation presets (approx trailing-average CPI) ----
+  var INFL = {
+    us: [ {p:"10년", r:3.2}, {p:"20년", r:2.6}, {p:"30년", r:2.5}, {p:"40년", r:2.9} ],
+    kr: [ {p:"10년", r:2.0}, {p:"20년", r:2.5}, {p:"30년", r:3.0}, {p:"40년", r:3.6} ]
+  };
+  var MILESTONES = [
+    {v:1e8, lbl:"1억"}, {v:3e8, lbl:"3억"}, {v:5e8, lbl:"5억"}, {v:1e9, lbl:"10억"}, {v:2e9, lbl:"20억"}
+  ];
+
+  var state = {
+    monthly:100, ret:10, years:30, infl:3, fee:0,
+    goal:10,           // 억원
+    showReal:false, cmpOn:false, delay:5
+  };
+
+  // ---- helpers ----
+  function clamp(v,min,max){ return Math.min(Math.max(v,min),max); }
+  var $ = function(id){ return document.getElementById(id); };
+
+  function eokman(v){
+    v = Math.round(v);
+    if(v <= 0) return "0원";
+    var eok = Math.floor(v/1e8), man = Math.floor((v%1e8)/1e4), s="";
+    if(eok>0) s += eok.toLocaleString('ko-KR')+"억";
+    if(man>0) s += (eok>0?" ":"")+man.toLocaleString('ko-KR')+"만";
+    if(!s) s = v.toLocaleString('ko-KR');
+    return s+"원";
+  }
+  function won(v){ return Math.round(v).toLocaleString('ko-KR'); }
+  function shortWon(v){
+    if(v>=1e8) return (v/1e8>=10 ? Math.round(v/1e8) : (v/1e8).toFixed(1))+"억";
+    if(v>=1e4) return Math.round(v/1e4)+"만";
+    return Math.round(v).toString();
+  }
+  function pct(mult){ return ((mult-1)*100).toLocaleString('ko-KR',{maximumFractionDigits:1})+'%'; }
+
+  // net annual return after fee drag: (1+r)*(1-f)-1
+  function netAnnual(){
+    var r = state.ret/100, f = state.fee/100;
+    return (1+r)*(1-f) - 1;
+  }
+  function monthlyRate(){
+    var rn = netAnnual();
+    if(rn <= -0.99) rn = -0.99;
+    return Math.pow(1+rn, 1/12) - 1;
+  }
+
+  // ---- core simulation ----
+  // delayYears: contributions start after this many years; timeline stays 1..state.years
+  function simulate(delayYears){
+    var d = delayYears || 0;
+    var monthly = state.monthly*10000;
+    var i = monthlyRate();
+    var infl = state.infl/100;
+    var rows=[], bal=0, prin=0;
+    for(var y=1; y<=state.years; y++){
+      if(y > d){
+        for(var m=0;m<12;m++){ bal += monthly; prin += monthly; bal *= (1+i); }
+      }
+      rows.push({
+        year:y, prin:prin, bal:bal, gains:bal-prin,
+        real: bal/Math.pow(1+infl, y),
+        realPrin: prin/Math.pow(1+infl, y),
+        mult: prin>0 ? bal/prin : 0
+      });
+    }
+    return rows;
+  }
+
+  // required monthly payment to reach target T (won) in state.years at current net return
+  function requiredMonthly(T){
+    var i = monthlyRate(), n = state.years*12;
+    var factor = (Math.abs(i) < 1e-12) ? n : ((Math.pow(1+i,n)-1)/i)*(1+i);
+    return factor > 0 ? T/factor : Infinity;
+  }
+
+  // ---- render ----
+  function render(animate){
+    var rows = simulate(0);
+    var last = rows[rows.length-1];
+
+    // crossover
+    var xIdx = -1;
+    for(var k=0;k<rows.length;k++){ if(rows[k].prin>0 && rows[k].gains>=rows[k].prin){ xIdx=k; break; } }
+
+    // milestone years (nominal)
+    var mileHits = {};
+    MILESTONES.forEach(function(ms){
+      for(var q=0;q<rows.length;q++){
+        if(rows[q].bal >= ms.v){ mileHits[ms.lbl]=rows[q].year; break; }
+      }
+    });
+
+    // hero
+    $('finalBig').innerHTML = won(last.bal)+' <span class="unit">원</span>';
+    var feeNote = state.fee>0 ? ' · 보수 '+state.fee.toFixed(1)+'% 차감 후' : '';
+    $('finalSub').innerHTML =
+      '약 <b>'+eokman(last.bal)+'</b> · 실질가치 약 '+eokman(last.real)+' (물가 '+state.infl.toFixed(1)+'% 반영)'+feeNote;
+    $('stPrin').innerHTML = eokman(last.prin);
+    $('stGain').innerHTML = eokman(last.gains);
+    $('stRate').innerHTML = (last.prin>0 ? pct(last.mult) : '–');
+
+    var cross = $('cross');
+    if(xIdx>=0){
+      var xr = rows[xIdx];
+      cross.className='cross';
+      cross.innerHTML =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C48A28" stroke-width="2.2" stroke-linecap="round"><path d="M4 20 L20 4 M14 4 L20 4 L20 10"/></svg>'+
+        '<div><b>'+xr.year+'년차</b>부터 누적 수익이 원금을 추월합니다 — 이 지점 이후 곡선이 가팔라집니다.</div>';
+    } else {
+      cross.className='cross none';
+      cross.innerHTML =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5D6C63" stroke-width="2" stroke-linecap="round"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>'+
+        '<div>선택한 기간 내에는 수익이 원금을 넘지 못합니다. 기간을 늘리거나 수익률을 높여 보세요.</div>';
+    }
+
+    // milestones
+    var mh='';
+    MILESTONES.forEach(function(ms){
+      var hit = mileHits[ms.lbl];
+      if(hit){
+        mh += '<span class="mile hit"><span class="flag">🏁</span>'+ms.lbl+' 돌파 <span class="my">'+hit+'년차</span></span>';
+      }
+    });
+    if(!mh) mh = '<span class="mile">기간 내 1억 미도달 — 불입액·기간·수익률을 조정해 보세요</span>';
+    $('miles').innerHTML = mh;
+
+    // delayed comparison
+    var rowsLate = null;
+    if(state.cmpOn){
+      if(state.delay >= state.years){
+        rowsLate = null;
+        $('lateCard').className='latecard show';
+        $('lateCard').innerHTML = '비교하려면 투자 기간이 지연 기간('+state.delay+'년)보다 길어야 합니다.';
+      } else {
+        rowsLate = simulate(state.delay);
+        var ll = rowsLate[rowsLate.length-1];
+        var gap = last.bal - ll.bal;
+        var extraPrin = last.prin - ll.prin;
+        $('lateCard').className='latecard show';
+        $('lateCard').innerHTML =
+          '<b>'+state.delay+'년 미루면</b> 최종 평가액이 <span class="amt">'+eokman(ll.bal)+'</span>으로 줄어, '+
+          '차이는 <b class="amt">'+eokman(gap)+'</b>입니다. 추가로 넣은 원금은 '+eokman(extraPrin)+'뿐 — 나머지 '+
+          '<b class="amt">'+eokman(gap-extraPrin)+'</b>는 순전히 <b>시간이 만든 복리 수익</b>입니다.';
+      }
+    } else {
+      $('lateCard').className='latecard';
+    }
+    $('legLate').style.display = (state.cmpOn && rowsLate) ? 'flex' : 'none';
+
+    // goal seek
+    var T = state.goal*1e8;
+    var reqM = requiredMonthly(T);
+    if(isFinite(reqM) && reqM>0){
+      $('goalMonthly').innerHTML = '월 '+eokman(reqM);
+      $('goalMonthlyNote').textContent = state.years+'년 · 연 '+state.ret.toFixed(1)+'%'+(state.fee>0?' (보수 '+state.fee.toFixed(1)+'% 차감)':'')+' 기준, 목표 '+state.goal.toLocaleString('ko-KR',{maximumFractionDigits:1})+'억원';
+    } else {
+      $('goalMonthly').textContent = '계산 불가';
+      $('goalMonthlyNote').textContent = '수익률·기간을 확인해 주세요.';
+    }
+    var whenY = -1;
+    for(var w=0;w<rows.length;w++){ if(rows[w].bal >= T){ whenY = rows[w].year; break; } }
+    if(whenY>0){
+      $('goalWhen').innerHTML = whenY+'년차 달성';
+      $('goalWhenNote').textContent = '월 '+state.monthly.toLocaleString('ko-KR')+'만원 불입 시 '+state.goal.toLocaleString('ko-KR',{maximumFractionDigits:1})+'억원 도달 시점';
+    } else {
+      $('goalWhen').textContent = '기간 내 미달성';
+      $('goalWhenNote').textContent = state.years+'년 안에는 목표에 도달하지 못합니다. 불입액이나 기간을 늘려 보세요.';
+    }
+
+    renderChart(rows, rowsLate, xIdx, mileHits, animate);
+    renderTable(rows, xIdx, mileHits);
+  }
+
+  function renderTable(rows, xIdx, mileHits){
+    // milestone year -> label (first milestone reached that year)
+    var yearMile = {};
+    MILESTONES.forEach(function(ms){
+      var y = mileHits[ms.lbl];
+      if(y && !yearMile[y]) yearMile[y] = ms.lbl;
+    });
+    var h='';
+    for(var k=0;k<rows.length;k++){
+      var r=rows[k], isX=(k===xIdx);
+      h += '<tr class="'+(isX?'xrow':'')+'">'
+        + '<td>'+r.year+'</td>'
+        + '<td class="teal">'+won(r.prin)+'</td>'
+        + '<td>'+won(r.bal)+(yearMile[r.year]?'<span class="mtag">'+yearMile[r.year]+'</span>':'')+'</td>'
+        + '<td class="gold">'+(r.prin>0?pct(r.mult):'–')+(isX?'<span class="tag">추월</span>':'')+'</td>'
+        + '<td>'+won(r.real)+'</td>'
+        + '</tr>';
+    }
+    $('tbody').innerHTML = h;
+  }
+
+  var tipEl = $('tip');
+
+  function renderChart(rows, rowsLate, xIdx, mileHits, animate){
+    var wrap = $('chartWrap');
+    var svg = $('chart');
+    var W = wrap.clientWidth || 640;
+    var H = 360;
+    var pad = {t:20, r:14, b:34, l:52};
+    var pw = W-pad.l-pad.r, ph = H-pad.t-pad.b;
+    var n = rows.length;
+    var real = state.showReal;
+
+    function valOf(r){ return real ? r.real : r.bal; }
+    function prinOf(r){ return real ? r.realPrin : r.prin; }
+
+    var maxV = 0;
+    for(var q=0;q<n;q++){ maxV = Math.max(maxV, valOf(rows[q])); }
+    maxV = (maxV||1) * 1.08;
+
+    var slot = pw/n;
+    function xOf(idx){ return pad.l + slot*idx + slot/2; }
+    function yOf(v){ return pad.t + ph - (v/maxV)*ph; }
+    var bw = Math.min(slot*0.64, 34);
+
+    var s='';
+    // gridlines
+    var lines=4;
+    for(var g=0; g<=lines; g++){
+      var gv = maxV*g/lines, gy=yOf(gv);
+      s += '<line x1="'+pad.l+'" y1="'+gy+'" x2="'+(W-pad.r)+'" y2="'+gy+'" stroke="#E2E8DD" stroke-width="1"/>';
+      s += '<text x="'+(pad.l-8)+'" y="'+(gy+4)+'" text-anchor="end" font-size="10.5" fill="#8A968D" font-family="Space Grotesk">'+(g===0?'0':shortWon(gv))+'</text>';
+    }
+
+    // bars
+    var labelEvery = n<=12?1 : (n<=20?2 : 5);
+    for(var k=0;k<n;k++){
+      var r=rows[k];
+      var x = pad.l + slot*k + (slot-bw)/2;
+      var vP = prinOf(r), vB = valOf(r);
+      var yP = yOf(vP), yB = yOf(vB);
+      var hP = (pad.t+ph)-yP, hG = yP-yB;
+      var isX = (k===xIdx);
+      var delay = animate ? (k*8)+'ms' : '0ms';
+      s += '<g class="barg'+(animate?' grow':'')+'" style="transform-origin:'+(x+bw/2)+'px '+(pad.t+ph)+'px;animation-delay:'+delay+'" data-i="'+k+'">'
+         + '<rect x="'+x+'" y="'+yP+'" width="'+bw+'" height="'+Math.max(hP,0)+'" rx="2" fill="#2F6B5C"/>'
+         + '<rect x="'+x+'" y="'+yB+'" width="'+bw+'" height="'+Math.max(hG,0)+'" rx="2" fill="#C48A28"/>'
+         + (isX ? '<rect x="'+x+'" y="'+yB+'" width="'+bw+'" height="'+Math.max(hG,0)+'" rx="2" fill="none" stroke="#8a5f14" stroke-width="1.4"/>' : '')
+         + '</g>';
+      if(k===0 || k===n-1 || (k+1)%labelEvery===0){
+        s += '<text x="'+(x+bw/2)+'" y="'+(pad.t+ph+18)+'" text-anchor="middle" font-size="10.5" fill="#8A968D" font-family="Space Grotesk">'+r.year+'</text>';
+      }
+    }
+    s += '<text x="'+(pad.l+pw/2)+'" y="'+(H-2)+'" text-anchor="middle" font-size="10" fill="#B4BEB6" font-family="Pretendard">연차 (년)</text>';
+
+    // crossover marker
+    if(xIdx>=0){
+      var cx = xOf(xIdx);
+      s += '<line x1="'+cx+'" y1="'+pad.t+'" x2="'+cx+'" y2="'+(pad.t+ph)+'" stroke="#C48A28" stroke-width="1.3" stroke-dasharray="4 4" opacity="0.6"/>';
+      s += '<circle cx="'+cx+'" cy="'+(pad.t+2)+'" r="3.5" fill="#C48A28"/>';
+      var tx = cx > W-120 ? cx-8 : cx+8;
+      var anc = cx > W-120 ? 'end':'start';
+      s += '<text x="'+tx+'" y="'+(pad.t+11)+'" text-anchor="'+anc+'" font-size="10.5" font-weight="600" fill="#8a5f14" font-family="Pretendard">수익 &gt; 원금</text>';
+    }
+
+    // delayed-start overlay line
+    if(state.cmpOn && rowsLate){
+      var pts='';
+      for(var d=0; d<n; d++){
+        var lv = real ? rowsLate[d].real : rowsLate[d].bal;
+        pts += (d===0?'M':'L') + xOf(d).toFixed(1) + ' ' + yOf(lv).toFixed(1) + ' ';
+      }
+      s += '<path d="'+pts+'" fill="none" stroke="#B0533E" stroke-width="2.2" stroke-dasharray="6 5" stroke-linecap="round" opacity="0.9"/>';
+      var lastLv = real ? rowsLate[n-1].real : rowsLate[n-1].bal;
+      s += '<circle cx="'+xOf(n-1)+'" cy="'+yOf(lastLv)+'" r="4" fill="#B0533E"/>';
+    }
+
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.setAttribute('width',W);
+    svg.setAttribute('height',H);
+    svg.innerHTML = s;
+
+    // hover
+    var groups = svg.querySelectorAll('.barg');
+    for(var t=0;t<groups.length;t++){
+      groups[t].addEventListener('mouseenter', function(){
+        var idx = +this.getAttribute('data-i'), r=rows[idx];
+        var html =
+          '<div class="ty">'+r.year+'년차'+(real?' · 실질':'')+'</div>'
+          +'<div class="tr"><span class="tl">평가금액</span><span>'+eokman(valOf(r))+'</span></div>'
+          +'<div class="tr"><span class="tl">원금</span><span>'+eokman(prinOf(r))+'</span></div>'
+          +'<div class="tr"><span class="tl">수익</span><span class="g">'+eokman(valOf(r)-prinOf(r))+'</span></div>'
+          +'<div class="tr"><span class="tl">수익률</span><span>'+(r.prin>0?pct(r.mult):'–')+'</span></div>';
+        if(state.cmpOn && rowsLate){
+          var lv = real ? rowsLate[idx].real : rowsLate[idx].bal;
+          html += '<div class="tr"><span class="tl">'+state.delay+'년 늦게</span><span class="l">'+eokman(lv)+'</span></div>';
+        }
+        tipEl.innerHTML = html;
+        var wrapW = wrap.clientWidth;
+        var gx = xOf(idx);
+        var px = gx/W*wrapW;
+        tipEl.style.left = Math.min(Math.max(px,80), wrapW-80)+'px';
+        tipEl.style.top = (yOf(valOf(r))-14)+'px';
+        tipEl.style.opacity = 1;
+      });
+      groups[t].addEventListener('mouseleave', function(){ tipEl.style.opacity=0; });
+    }
+  }
+
+  // ---- labels ----
+  function syncLabels(){
+    $('lblMonthly').textContent = state.monthly.toLocaleString('ko-KR')+'만원';
+    $('lblReturn').textContent = state.ret.toFixed(1)+'%';
+    $('lblYears').textContent = state.years+'년';
+    $('lblFee').textContent = state.fee.toFixed(1)+'%';
+    $('lblInfl').textContent = state.infl.toFixed(1)+'%';
+  }
+
+  // ---- generic decimal text input binding ----
+  // Leaves the field alone while typing; normalizes to 1 decimal on blur/Enter.
+  function bindDecimal(id, get, set, min, max){
+    $(id).addEventListener('input', function(){
+      var raw = this.value.trim();
+      if(raw === '' || raw === '-') return;
+      var v = parseFloat(raw);
+      if(isNaN(v)) return;
+      set(clamp(v,min,max), 'num');
+    });
+    $(id).addEventListener('change', function(){
+      var v = parseFloat(this.value);
+      if(isNaN(v)) v = get();
+      set(clamp(v,min,max), 'blur');
+      this.value = get().toFixed(1);
+    });
+  }
+
+  // ---- monthly ----
+  $('monthly').addEventListener('input', function(){
+    var raw = this.value.trim();
+    if(raw === '') return;
+    var v = parseInt(raw,10);
+    if(isNaN(v) || v < 0) return;
+    state.monthly = clamp(v, 0, 1000000);
+    syncLabels(); render(false);
+  });
+  $('monthly').addEventListener('change', function(){
+    var v = parseInt(this.value,10);
+    if(isNaN(v) || v < 0) v = state.monthly;
+    state.monthly = clamp(v, 0, 1000000);
+    this.value = state.monthly;
+    syncLabels(); render(false);
+  });
+  document.querySelectorAll('.chip[data-m]').forEach(function(b){
+    b.addEventListener('click', function(){
+      state.monthly = +this.getAttribute('data-m');
+      $('monthly').value = state.monthly;
+      syncLabels(); render(false);
+    });
+  });
+
+  // ---- return ----
+  function setReturn(v, source){
+    state.ret = clamp(v, -10, 40);
+    if(source !== 'num') $('retNum').value = state.ret.toFixed(1);
+    if(source !== 'slider') $('retSlider').value = clamp(state.ret,0,30);
+    if(source !== 'preset') clearActivePreset();
+    syncLabels(); render(false);
+  }
+  bindDecimal('retNum',
+    function(){ return state.ret; },
+    function(v, src){ setReturn(v, src); },
+    -10, 40);
+  $('retSlider').addEventListener('input', function(){ setReturn(+this.value, 'slider'); });
+
+  // ---- years ----
+  function setYears(v, source){
+    state.years = clamp(Math.round(v),1,50);
+    if(source !== 'num') $('yrNum').value = state.years;
+    if(source !== 'slider') $('yrSlider').value = clamp(state.years,1,40);
+    syncLabels(); render(source === 'slider');
+  }
+  $('yrNum').addEventListener('input', function(){
+    var raw = this.value.trim();
+    if(raw === '') return;
+    var v = parseInt(raw, 10);
+    if(isNaN(v) || v < 1) return;
+    setYears(v, 'num');
+  });
+  $('yrNum').addEventListener('change', function(){
+    var v = parseInt(this.value, 10);
+    if(isNaN(v) || v < 1) v = state.years;
+    setYears(v, 'blur');
+  });
+  $('yrSlider').addEventListener('input', function(){ setYears(+this.value, 'slider'); });
+
+  // ---- fee ----
+  bindDecimal('feeNum',
+    function(){ return state.fee; },
+    function(v){ state.fee = v; syncLabels(); render(false); },
+    0, 5);
+
+  // ---- inflation ----
+  var activeInfl=null;
+  function clearActiveInfl(){ if(activeInfl){ activeInfl.classList.remove('active'); activeInfl=null; } }
+  bindDecimal('inflNum',
+    function(){ return state.infl; },
+    function(v){ state.infl = v; clearActiveInfl(); syncLabels(); render(false); },
+    0, 20);
+
+  // ---- goal ----
+  bindDecimal('goalNum',
+    function(){ return state.goal; },
+    function(v){ state.goal = v; render(false); },
+    0.1, 1000);
+
+  // ---- return presets ----
+  var activePreset=null;
+  function clearActivePreset(){
+    if(activePreset){ activePreset.classList.remove('active'); activePreset=null; }
+  }
+  function buildPresets(){
+    ['sp','nq'].forEach(function(key){
+      var host = document.querySelector('.pgrid[data-idx="'+key+'"]');
+      var html='';
+      PRESETS[key].forEach(function(o,i){
+        html += '<button class="pchip" data-key="'+key+'" data-i="'+i+'" data-r="'+o.r+'">'
+             +  '<b>'+o.r.toFixed(1)+'%</b><span>최근 '+o.p+'</span></button>';
+      });
+      host.innerHTML = html;
+    });
+    document.querySelectorAll('.pchip').forEach(function(b){
+      b.addEventListener('click', function(){
+        clearActivePreset();
+        this.classList.add('active'); activePreset=this;
+        var v=+this.getAttribute('data-r');
+        state.ret=v; $('retNum').value=v.toFixed(1); $('retSlider').value=clamp(v,0,30);
+        syncLabels(); render(true);
+      });
+    });
+  }
+
+  // ---- inflation presets ----
+  function buildInflPresets(){
+    ['us','kr'].forEach(function(key){
+      var host = document.querySelector('.igrid[data-c="'+key+'"]');
+      var html='';
+      INFL[key].forEach(function(o){
+        html += '<button class="ichip" data-r="'+o.r+'"><b>'+o.r.toFixed(1)+'%</b><span>'+o.p+'</span></button>';
+      });
+      host.innerHTML = html;
+    });
+    document.querySelectorAll('.ichip').forEach(function(b){
+      b.addEventListener('click', function(){
+        clearActiveInfl();
+        this.classList.add('active'); activeInfl=this;
+        var v=+this.getAttribute('data-r');
+        state.infl=v; $('inflNum').value=v.toFixed(1);
+        syncLabels(); render(false);
+      });
+    });
+  }
+
+  // ---- toggles ----
+  $('tglReal').addEventListener('click', function(){
+    state.showReal = !state.showReal;
+    this.classList.toggle('on', state.showReal);
+    render(false);
+  });
+  $('tglLate').addEventListener('click', function(){
+    state.cmpOn = !state.cmpOn;
+    this.classList.toggle('on', state.cmpOn);
+    $('delaySel').style.display = state.cmpOn ? 'inline-block' : 'none';
+    render(false);
+  });
+  $('delaySel').addEventListener('change', function(){
+    state.delay = +this.value;
+    render(false);
+  });
+
+  // ---- CSV ----
+  $('csvBtn').addEventListener('click', function(){
+    var rows = simulate(0);
+    var head = ['연차','누적 원금(원)','평가금액(원)','수익률(%)','물가상승 실질가치(원)'];
+    var lines = [head.join(',')];
+    rows.forEach(function(r){
+      lines.push([
+        r.year, Math.round(r.prin), Math.round(r.bal),
+        r.prin>0 ? ((r.mult-1)*100).toFixed(1) : '',
+        Math.round(r.real)
+      ].join(','));
+    });
+    var meta = '# 월 '+state.monthly+'만원, 연 '+state.ret.toFixed(1)+'%, '+state.years+'년, 보수 '+state.fee.toFixed(1)+'%, 물가 '+state.infl.toFixed(1)+'%';
+    var csv = '\uFEFF'+meta+'\n'+lines.join('\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'compound_simulation.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 100);
+  });
+
+  // ---- resize ----
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt); rt=setTimeout(function(){ render(false); },120);
+  });
+
+  // ---- init ----
+  buildPresets();
+  buildInflPresets();
+  syncLabels();
+  render(true);
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+</script>
+</body>
+</html>
