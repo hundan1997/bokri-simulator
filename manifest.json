@@ -1,4 +1,5 @@
 {
+  "id": "bokri-compound-simulator-v2",
   "name": "복리 적립 시뮬레이터",
   "short_name": "복리",
   "start_url": "./index.html",
